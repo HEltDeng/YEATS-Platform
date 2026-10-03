@@ -1,0 +1,1 @@
+{"compilerOptions":{"target":"ES2018","module":"commonjs","strict":true,"noImplicitThis":false,"noImplicitAny":false,"types":["miniprogram-api-typings"],"skipLibCheck":true,"lib":["ES2020"],"ignoreDeprecations":"6.0"},"include":["**/*.ts"],"exclude":["node_modules"]}

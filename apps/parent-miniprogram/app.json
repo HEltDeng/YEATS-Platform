@@ -1,0 +1,65 @@
+{
+  "pages": [
+    "pages/login/index",
+    "pages/home/index",
+    "pages/hours/index",
+    "pages/ledger/index",
+    "pages/attendance/index",
+    "pages/schedule/index",
+    "pages/tests/index",
+    "pages/homework/index",
+    "pages/homework-detail/index",
+    "pages/feedback/index",
+    "pages/recordings/index",
+    "pages/knowledge/index",
+    "pages/knowledge-detail/index",
+    "pages/teachers/index",
+    "pages/teacher-detail/index",
+    "pages/notifications/index",
+    "pages/me/index",
+    "pages/profile/index",
+    "pages/settings/index",
+    "pages/content/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "叶芝英语",
+    "navigationBarBackgroundColor": "#FF8A00",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#FFF8F0"
+  },
+  "tabBar": {
+    "color": "#9C8A76",
+    "selectedColor": "#F26A00",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "首页",
+        "iconPath": "assets/home.png",
+        "selectedIconPath": "assets/home-on.png"
+      },
+      {
+        "pagePath": "pages/homework/index",
+        "text": "作业",
+        "iconPath": "assets/homework.png",
+        "selectedIconPath": "assets/homework-on.png"
+      },
+      {
+        "pagePath": "pages/knowledge/index",
+        "text": "知识库",
+        "iconPath": "assets/knowledge.png",
+        "selectedIconPath": "assets/knowledge-on.png"
+      },
+      {
+        "pagePath": "pages/me/index",
+        "text": "我的",
+        "iconPath": "assets/me.png",
+        "selectedIconPath": "assets/me-on.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents",
+  "sitemapLocation": "sitemap.json"
+}

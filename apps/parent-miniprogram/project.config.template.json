@@ -1,0 +1,42 @@
+{
+  "description": "YEATS-叶芝英语 独立家长端",
+  "projectname": "YEATS-叶芝英语",
+  "appid": "touristappid",
+  "compileType": "miniprogram",
+  "miniprogramRoot": "./",
+  "libVersion": "latest",
+  "setting": {
+    "es6": true,
+    "minified": true,
+    "postcss": true,
+    "urlCheck": true,
+    "compileHotReLoad": true
+  },
+  "packOptions": {
+    "ignore": [
+      {
+        "type": "suffix",
+        "value": ".ts"
+      },
+      {
+        "type": "folder",
+        "value": "tests"
+      },
+      {
+        "type": "file",
+        "value": "tsconfig.json"
+      }
+    ]
+  },
+  "condition": {
+    "miniprogram": {
+      "list": [
+        {
+          "name": "YEATS 家长登录",
+          "pathName": "pages/login/index",
+          "query": ""
+        }
+      ]
+    }
+  }
+}
