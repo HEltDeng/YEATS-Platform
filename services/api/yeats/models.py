@@ -122,6 +122,8 @@ class Homework(Row,Base):
     due_at: Mapped[datetime|None] = mapped_column(DateTime)
     grading_due_at: Mapped[datetime|None] = mapped_column(DateTime)
     late_policy: Mapped[str] = mapped_column(String(20),default='unconfirmed')
+    submission_requirement: Mapped[str] = mapped_column(String(24),default='image_or_text',server_default='image_or_text')
+    submission_instructions: Mapped[str] = mapped_column(Text,default='',server_default='')
     attachment_ids: Mapped[list] = mapped_column(JSON,default=list)
     published: Mapped[bool] = mapped_column(default=True)
 class HomeworkTarget(Row,Base):
@@ -267,3 +269,17 @@ class Audit(Row,Base):
     action: Mapped[str] = mapped_column(String(80))
     resource_id: Mapped[str|None] = mapped_column(String(36))
     detail: Mapped[dict] = mapped_column(JSON,default=dict)
+
+class KnowledgeChangeRequest(Row,Base):
+    __tablename__='knowledge_change_requests'
+    teacher_id: Mapped[str] = mapped_column(ForeignKey('accounts.id'))
+    category_id: Mapped[str|None] = mapped_column(ForeignKey('categories.id'))
+    knowledge_id: Mapped[str|None] = mapped_column(ForeignKey('knowledge.id'))
+    change_type: Mapped[str] = mapped_column(String(20))
+    title: Mapped[str] = mapped_column(String(200))
+    text: Mapped[str] = mapped_column(Text)
+    attachment_ids: Mapped[list] = mapped_column(JSON,default=list)
+    status: Mapped[str] = mapped_column(String(20),default='pending')
+    response: Mapped[str] = mapped_column(Text,default='')
+    processed_by: Mapped[str|None] = mapped_column(ForeignKey('accounts.id'))
+    processed_at: Mapped[datetime|None] = mapped_column(DateTime)

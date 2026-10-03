@@ -1,11 +1,9 @@
-# Parent 开发依赖审计分析（2026-10-03）
+# 家长开发工具依赖兼容修复 · 2026-10-03
 
-当前 npm audit：5 moderate、0 high、0 critical。这5项是同一根因沿 file-type → @jimp/core → @jimp/custom → jimp → miniprogram-automator 传播，不是5个独立漏洞。file-type 本地16.5.4；官方修复21.3.1。官方说明是畸形ASF子头size=0造成文件探测无限循环，属于可用性风险，不是凭据泄露证据。
+历史审计中5个中度节点来自同一 file-type 16.5.4 / Jimp 链。官方 miniprogram-automator 0.12.1 的远程调试二维码解码实际调用 Jimp.read，再调用 file-type.fromBuffer；直接换成 ESM 新版会破坏旧接口，因此没有使用强制升级或忽略审计。
 
-上游原始说明：https://github.com/sindresorhus/file-type/security/advisories/GHSA-5v7r-6r5c-r473
+本次保留 Jimp 0.22.12，项目内 tools/file-type-buffer-compat 用9行 CommonJS 适配器异步加载 file-type 21.3.4，保留 fromBuffer 接口。npm overrides 使用显式本地依赖引用，锁文件已通过 npm ci --ignore-scripts 干净安装。适配层仅开发工具使用，不进入微信验收/生产包。
 
-实际调用已检：官方 miniprogram-automator/out/util.js 的 decodeQrCode 将 Base64 图像交给 Jimp.read；@jimp/core/dist/utils/image-bitmap.js 调用 require('file-type').fromBuffer。该链仅存在本地开发工具，独立验收/生产小程序包不包含 node_modules；FastAPI和老师网页不加载它。当前代码没有把家长作业文件送进这一Node解码链。影响主要是开发工具处理攻击者可控的伪装二维码图像时卡住；不能因未在生产包中就写“漏洞已修复”。
+验证：11项家长测试通过，其中官方自动化工具对合成二维码的真实解码、PNG/JPEG读取，以及恶意零长度ASF头在独立worker超时保护下正常结束。兼容实验工程安装/审计0漏洞。实际家长仓库在线audit在08:39 UTC两次遇到官方registry TLS连接中断；08:44后的最终重试成功：100个依赖、0个漏洞。保留失败事实，不将网络失败当成通过。
 
-兼容性结论：npm元数据确认21.3.1为ES module，要求Node>=20；其公开方法改为fileTypeFromBuffer，现有Jimp期待fromBuffer。直接强制override版本不是可验证的兼容修复。升级Jimp主版本也涉及官方automator期望的默认导出/read接口。未使用 npm audit fix --force，未回退官方automator，未手改node_modules来制造审计通过。
-
-后续可控方案：在独立工具分支验证新的Jimp/检测适配层，或按上游补丁回移ASF边界检查并用畸形输入在worker timeout下回归，再完整验证官方CLI连接/预览/二维码解码。前者是工具兼容迁移；后者须维护补丁且npm审计版本仍会报项。当前保留风险记录，不加载未知来源二维码/图像，不把开发工具暴露为公共上传服务。没有更改现用依赖或正在运行的微信工程。
+依据：上游安全公告 https://github.com/sindresorhus/file-type/security/advisories/GHSA-5v7r-6r5c-r473 及 npm 官方 overrides 文档 https://docs.npmjs.com/cli/v11/configuring-npm/package-json/#overrides 。21.3.1的试验版本仍有另一ZIP条目，最终使用21.3.4。没有关闭证书校验、修改全局npm配置或网络设置。

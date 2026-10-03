@@ -29,6 +29,8 @@ class Publish(Input):
     due_at:datetime|None=None
     grading_due_at:datetime|None=None
     late_policy:str=Field(pattern='^(allow|deny|unconfirmed)$')
+    submission_requirement:str=Field(default='image_or_text',pattern='^(image_or_text|images|images_text|text)$')
+    submission_instructions:str=Field(default='',max_length=2000)
     key:str=Field(min_length=16,max_length=80)
 class Grade(Input):
     text:str=Field(default='',max_length=4000)
@@ -185,7 +187,7 @@ def homework_view(db,h,sids):
     for sid in targets:
         s=db.scalar(select(Submission).where(Submission.homework_id==h.id,Submission.student_id==sid).order_by(Submission.revision.desc()))
         latest.append({'student_id':sid,'name':db.get(Student,sid).name,'status':s.status if s else 'todo','submission_id':s.id if s else None})
-    return {**view(h,'title','body','due_at','grading_due_at','late_policy'),'files':files(db,h.attachment_ids),'student_ids':targets,'targets':latest}
+    return {**view(h,'title','body','due_at','grading_due_at','late_policy','submission_requirement','submission_instructions'),'files':files(db,h.attachment_ids),'student_ids':targets,'targets':latest}
 @router.get('/homework')
 def homework_list(class_id:str|None=None,a:Account=Depends(teacher),db:DB=Depends(database)):
     cs=classes(db,a)
@@ -209,7 +211,7 @@ def publish(body:Publish,a:Account=Depends(teacher),db:DB=Depends(database)):
     attachments(db,a,body.attachment_ids)
     payload={'action':'publish',**body.model_dump()};previous=begin(db,a,body.key,payload)
     if previous:return previous
-    h=Homework(teacher_id=a.id,title=body.title.strip(),body=body.body.strip(),due_at=utc(body.due_at),grading_due_at=utc(body.grading_due_at),late_policy=body.late_policy,attachment_ids=body.attachment_ids);db.add(h);db.flush()
+    h=Homework(teacher_id=a.id,title=body.title.strip(),body=body.body.strip(),due_at=utc(body.due_at),grading_due_at=utc(body.grading_due_at),late_policy=body.late_policy,submission_requirement=body.submission_requirement,submission_instructions=body.submission_instructions,attachment_ids=body.attachment_ids);db.add(h);db.flush()
     for sid in sids:db.add(HomeworkTarget(homework_id=h.id,student_id=sid));notify(db,sid,'homework','新作业：'+h.title,h.id)
     audit(db,a,'homework_publish',h.id,{'class_ids':body.class_ids,'student_count':len(sids)})
     return done(db,a,body.key,payload,{'id':h.id,'saved':True})
@@ -241,11 +243,13 @@ def tests(lesson_id:str,a:Account=Depends(teacher),db:DB=Depends(database)):
     lesson_scope(db,a,lesson_id);return [test_view(db,t) for t in db.scalars(select(TestResult).where(TestResult.lesson_id==lesson_id))]
 def save_test(body,a,db,tid=None):
     l=lesson_scope(db,a,body.lesson_id);student_scope(db,a,body.student_id,l.class_id)
-    row=db.get(TestResult,tid) if tid else None
-    if tid and (not row or row.lesson_id!=body.lesson_id or row.student_id!=body.student_id):raise HTTPException(404)
-    attachments(db,a,body.attachment_ids,existing=row.attachment_ids if row else ())
     payload={'action':'test','id':tid,**body.model_dump()};previous=begin(db,a,body.key,payload)
     if previous:return previous
+    # Match the batch writer's lock order; read existing media only after locking.
+    db.scalar(select(Lesson).where(Lesson.id==l.id).with_for_update())
+    row=db.scalar(select(TestResult).where(TestResult.id==tid).with_for_update()) if tid else None
+    if tid and (not row or row.lesson_id!=body.lesson_id or row.student_id!=body.student_id):raise HTTPException(404)
+    attachments(db,a,body.attachment_ids,existing=row.attachment_ids if row else ())
     if not row:row=TestResult(student_id=body.student_id,lesson_id=body.lesson_id);db.add(row)
     before={'published':row.published,'text':row.text,'score':row.score,'attachment_ids':row.attachment_ids} if tid else None
     for k in ['kind','title','text','score','attachment_ids','published']:setattr(row,k,getattr(body,k))
@@ -317,11 +321,6 @@ def reply(qid:str,body:Reply,a:Account=Depends(teacher),db:DB=Depends(database))
     # Private question notifications go only to the asking parent.
     n=Notification(account_id=q.parent_id,student_id=q.student_id,kind='knowledge',title='老师已答复你的提问',resource_id=q.knowledge_id);db.add(n);db.flush();db.add(Outbox(notification_id=n.id))
     return done(db,a,body.key,payload,{'saved':True})
-@router.post('/knowledge/change-requests')
-def change_request(body:ChangeRequest,a:Account=Depends(teacher),db:DB=Depends(database)):
-    payload={'action':'change_request',**body.model_dump()};previous=begin(db,a,body.key,payload)
-    if previous:return previous
-    audit(db,a,'knowledge_change_request',body.knowledge_id,{'text':body.text,'state':'pending_platform'});return done(db,a,body.key,payload,{'saved':True})
 @router.get('/recordings')
 def recordings(a:Account=Depends(teacher),db:DB=Depends(database)):
     lids=list(db.scalars(select(Lesson.id).where(Lesson.class_id.in_(classes(db,a)))))

@@ -18,7 +18,7 @@ from .wechat import wechat
 from .storage import store
 from . import schemas as S
 
-app=FastAPI(title='YEATS · 叶芝英语',version='0.2.0',docs_url='/docs' if settings.environment!='production' else None)
+app=FastAPI(title='YEATS · 叶芝英语',version='0.3.0',docs_url='/docs' if settings.environment!='production' else None)
 if settings.environment=='development' and settings.enable_development_login:
     from .development import router
     app.include_router(router)
@@ -52,7 +52,7 @@ def lesson_view(db,l):
     return {**public(l,'title','starts_at','ends_at','room','units','status','class_id'), 'teacher':db.get(Account,l.teacher_id).name}
 def homework_view(db,h,sid):
     s=db.scalar(select(Submission).where(Submission.homework_id==h.id,Submission.student_id==sid).order_by(Submission.revision.desc()))
-    return {**public(h,'title','body','due_at','grading_due_at','late_policy'),'teacher':db.get(Account,h.teacher_id).name,'files':file_meta(db,h.attachment_ids),'status':s.status if s else 'todo','grading_overdue':bool(s and s.status=='submitted' and h.grading_due_at and now()>h.grading_due_at),'overdue':bool(h.due_at and now()>h.due_at and (not s or s.status=='returned')),'submission':public(s,'text','status','revision','attachment_ids') if s else None}
+    return {**public(h,'title','body','due_at','grading_due_at','late_policy','submission_requirement','submission_instructions'),'teacher':db.get(Account,h.teacher_id).name,'files':file_meta(db,h.attachment_ids),'status':s.status if s else 'todo','grading_overdue':bool(s and s.status=='submitted' and h.grading_due_at and now()>h.grading_due_at),'overdue':bool(h.due_at and now()>h.due_at and (not s or s.status=='returned')),'submission':public(s,'text','status','revision','attachment_ids') if s else None}
 def hours_view(db,sid):
     packages=list(db.scalars(select(HourPackage).where(HourPackage.student_id==sid)))
     entries=list(db.scalars(select(HourEntry).where(HourEntry.student_id==sid).order_by(HourEntry.created_at.desc())))
@@ -173,6 +173,9 @@ def submit(sid:str,hid:str,body:S.Submit,a:Account=Depends(parent),db:DB=Depends
     if latest and latest.status!='returned': raise HTTPException(409,'作业已提交，老师退回后可重新提交')
     if h.due_at and now()>h.due_at and h.late_policy!='allow': raise HTTPException(409,'已超过截止时间，请联系老师确认补交')
     if not body.text.strip() and not body.attachment_ids: raise HTTPException(422,'请填写文字或上传图片')
+    if h.submission_requirement in ('images','images_text') and not body.attachment_ids:raise HTTPException(422,'本次作业要求上传图片')
+    if h.submission_requirement in ('text','images_text') and not body.text.strip():raise HTTPException(422,'本次作业要求填写文字说明')
+    if h.submission_requirement=='text' and body.attachment_ids:raise HTTPException(422,'本次作业仅接收文字，请移除图片')
     if len(body.attachment_ids)>settings.upload_image_count or len(set(body.attachment_ids))!=len(body.attachment_ids): raise HTTPException(422,'图片数量超出限制或存在重复')
     for fid in body.attachment_ids:
         f=db.get(FileObject,fid)
@@ -301,3 +304,7 @@ import os
 teacher_dist=Path(os.environ.get('YEATS_TEACHER_DIST', str(Path(__file__).resolve().parents[4]/'YEATS-Teacher/dist')))
 if teacher_dist.is_dir():
     app.mount('/teacher',StaticFiles(directory=teacher_dist,html=True),name='teacher-web')
+
+from .teacher_workflows import router as teacher_workflows_router, receipt_router
+app.include_router(teacher_workflows_router)
+app.include_router(receipt_router)

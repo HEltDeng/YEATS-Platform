@@ -1,4 +1,4 @@
-param([ValidateSet('start','status','stop','restart')][string]$Action='status',[switch]$WithTestIdentities)
+param([ValidateSet('start','status','stop','restart','restart-api')][string]$Action='status',[switch]$WithTestIdentities)
 $ErrorActionPreference='Stop'
 $root=Split-Path $PSScriptRoot
 $python=Join-Path $root '.venv/Scripts/python.exe'
@@ -36,19 +36,28 @@ function Status {
   Write-Host "Local logs (do not upload): $runtime\api.stderr.log; $runtime\postgres.log"
   Write-Host "Preserved database: $pgdata | Uploads: $runtime\private-files"
 }
-if ($Action -in 'stop','restart') {
+if ($Action -in 'stop','restart','restart-api') {
   # Verify both identities before touching either service.
   $api=OwnedApi
   $db=Listener 55432
   if ($db.Count) { CheckDb }
-  if ($api) { Stop-Process -Id $api.ProcessId -ErrorAction Stop }
-  if ($db.Count) {
+  if ($api) {
+    Stop-Process -Id $api.ProcessId -ErrorAction Stop
+    # Windows may retain a terminated listener briefly; wait only for the
+    # verified process to release it before re-evaluating port ownership.
+    for ($attempt=0;$attempt -lt 50;$attempt++) {
+      if (!((Listener 8930) -contains $api.ProcessId)) { break }
+      Start-Sleep -Milliseconds 100
+    }
+    if ((Listener 8930) -contains $api.ProcessId) { throw 'Verified YEATS API listener did not release its port; restart stopped safely' }
+  }
+  if ($db.Count -and $Action -ne 'restart-api') {
     & $pgctl -D $pgdata -m fast -w stop
     if ($LASTEXITCODE -ne 0) { throw 'YEATS PostgreSQL stop failed' }
   }
   if ($Action -eq 'stop') { Status; exit 0 }
 }
-if ($Action -in 'start','restart') {
+if ($Action -in 'start','restart','restart-api') {
   $api=OwnedApi
   if ($api) {
     CheckDb
