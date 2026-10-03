@@ -1,5 +1,5 @@
 // Actual WeChat simulator routes, no wx mocks and no fabricated page state.
-const automator=require('miniprogram-automator');
+const automator=require(require('path').resolve(__dirname,'../../YEATS-Parent/node_modules/miniprogram-automator'));
 const fs=require('fs'),path=require('path');
 const output=path.resolve(__dirname,'../../02_Deliverables-交付与验收/simulator');
 (async()=>{

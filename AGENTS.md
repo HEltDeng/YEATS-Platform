@@ -1,13 +1,9 @@
-# YEATS｜叶芝英语
+# YEATS｜叶芝英语 — Platform：平台管理网页 apps/admin-web + 唯一共用后端 services/api
 
-唯一源码入口：D:\Codex\02_MiniProgram-小程序开发\002_YEATS-叶芝英语小程序\01_Source-当前源码。
-仓库：HEltDeng/YEATS（Private）。技术标识 yeats，产品名叶芝英语。
-每次任务先核对 cwd、git rev-parse --show-toplevel、branch、HEAD、status、remote。
-本轮阶段 0/1：微信原生家长端 + FastAPI/PostgreSQL 后端。老师端/管理端为后续 React PC 网页，家长端经用户验收前不铺开。
-只修改本项目与明确授权的项目索引新增记录。原件位于 ../00_Reference-需求与原型，只读，不覆盖。
-禁止混入 VaSports、课堂答题平台、我的长理的源码身份、AppID、凭据、数据库、生产配置或真实数据。
-配置：apps/parent-miniprogram/project.config.json、config.ts（无秘密的环境设置）、services/api/.env（忽略）、infra/。
-不伪造微信身份、不硬编码 token、不设公开测试登录，不以 SQLite/接口夹具替代微信及 PostgreSQL 实机验收。
-需求优先级：用户最新明确指令 > 确认需求 > 视觉 Demo。建议值不自动转生产规则。
-视频无下载/转发入口；家长作业仅图片/文字；约课/调课/缴费按已确认需求走企微线下流程。
-上传、审核、发布遵守阶段验收门槛。未经用户验收不得上传微信版本。生产数据与秘密禁止入 Git。
+唯一开发入口：D:\Codex\02_MiniProgram-小程序开发\002_YEATS-叶芝英语小程序\01_Source-当前源码。
+每次核对 cwd、Git 根、分支、HEAD、status、remote。三仓互不嵌套，三个前端只调用 Platform 的共用 FastAPI/PostgreSQL。
+保留认可 Demo 样式，最新用户明确要求优先。原件 ../00_Reference-需求与原型 只读。
+禁止混入其他项目的身份、配置、数据库、密钥或数据。数据库与上传目录保留 Platform 原路径，不重初始化或搬动运行中数据库。
+AppSecret、Token、真实身份、备份、私有文件禁止提交。测试身份仅限受控 development，体验/生产前后端均禁用。
+老师知识库只读浏览与班级引用，平台维护分类/内容；补看审批由平台管理员。视频无下载/转发，家长作业仅图片/文字；约课/调课/缴费走企微线下。
+当前用户授权修复家长端、拆三私有仓、开发老师端并联调；老师阶段验收后进入平台管理端。开发自测、待用户验收、已验收严格区分。未经授权不得部署、上传微信、提审或发布。

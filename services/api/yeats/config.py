@@ -13,7 +13,7 @@ if os.environ.get('YEATS_ENVIRONMENT','development') == 'development' and os.nam
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix='YEATS_', env_file='services/api/.env', extra='ignore')
     environment: str = 'development'
-    database_url: str = 'sqlite:///runtime/yeats-development.db'
+    database_url: str = ''
     file_root: Path = Path('runtime/private-files')
     public_base_url: str = 'http://127.0.0.1:8930'
     wechat_appid: str = ''
@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     viewing_start_policy: str = 'approval_time'
 
 settings = Settings()
+if settings.environment!='test' and not settings.database_url.startswith('postgresql+psycopg://'):
+    raise RuntimeError('YEATS requires explicit PostgreSQL configuration; no fallback database')
 if settings.enable_development_login and settings.environment!='development':
     raise RuntimeError('Development login is prohibited outside development')
 if settings.environment not in {'development','test','acceptance','production'}:

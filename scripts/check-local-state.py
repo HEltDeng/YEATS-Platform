@@ -48,7 +48,7 @@ assert report['submission_revisions'] == [2, 1]
 assert report['submission_statuses'][0] == 'graded'
 assert report['submission_file_counts'] == [0, 1]  # revision 2 is text-only; original image remains in history
 assert report['feedback_count'] > 0 and report['question_count'] >= 2
-assert report['notification_unread_count'] == 0 and report['saved_test_profile_matches']
+assert report['saved_test_profile_matches']  # New teacher actions legitimately add unread notifications.
 assert report['other_parent_student_status'] == 404  # conceal the existence of another parent's child
 assert report['revoked_session_status'] == report['unauthenticated_status'] == 401
 destination = root.parent / '02_Deliverables-交付与验收/simulator/persistence-after-restart.json'

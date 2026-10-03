@@ -1,5 +1,8 @@
 {
-  "name":"yeats","version":"0.1.0","private":true,
-  "scripts":{"build:parent":"tsc -p apps/parent-miniprogram/tsconfig.json","check":"tsc -p apps/parent-miniprogram/tsconfig.json --noEmit","test:parent":"node --test apps/parent-miniprogram/tests/*.js"},
-  "devDependencies":{"typescript":"7.0.2","miniprogram-api-typings":"5.2.3","miniprogram-automator":"0.12.1"}
+  "name": "yeats-platform",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test:api": "./.venv/Scripts/python.exe scripts/test-postgres.py"
+  }
 }

@@ -10,14 +10,6 @@ def api(path,method='GET',data=None):
 user=api('/user')['login']
 print('Authenticated account:',user)
 if user!='HEltDeng': raise SystemExit('Account differs from connected GitHub; stopped')
-try:
-    repo=api('/repos/'+user+'/YEATS')
-    print(json.dumps({k:repo[k] for k in ['full_name','private','html_url','description','size']},ensure_ascii=False))
-    if '--create' in sys.argv: raise SystemExit('Existing repository: must inspect ownership before reuse')
-except urllib.error.HTTPError as e:
-    if e.code!=404: raise
-    print('YEATS repository does not exist')
-    if '--create' in sys.argv:
-        repo=api('/user/repos','POST',{'name':'YEATS','private':True,'description':'YEATS｜叶芝英语定制小程序及三端管理系统','auto_init':False})
-        print('Created private repository:',repo['html_url'])
-        subprocess.run(['git','remote','add','origin',repo['clone_url']],check=True)
+repo=api('/repos/'+user+'/YEATS-Platform')
+print(json.dumps({k:repo[k] for k in ['full_name','private','html_url','description','size']},ensure_ascii=False))
+if not repo['private']:raise SystemExit('YEATS-Platform must remain private')

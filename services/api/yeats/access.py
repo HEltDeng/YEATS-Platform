@@ -26,6 +26,9 @@ def recording_grant(db,student_id,recording_id):
     if not r or not r.published: return None
     return db.scalar(select(ViewingGrant).where(ViewingGrant.student_id==student_id,ViewingGrant.recording_id==recording_id,ViewingGrant.revoked==False,ViewingGrant.starts_at<=now(),ViewingGrant.expires_at>now()))
 def can_file(db,account,f,student_id):
+    if account.role=="teacher":
+        from .staff import file_allowed
+        return file_allowed(db,account,f)
     if not f or not f.available or f.safety!='passed': return False
     if any(f.id in c.attachment_ids for c in db.scalars(select(Content).where(Content.published==True))): return True
     if any(f.id in [p.avatar_file_id,p.demo_file_id] for p in db.scalars(select(TeacherProfile).where(TeacherProfile.published==True))): return True

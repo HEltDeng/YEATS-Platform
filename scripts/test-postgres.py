@@ -21,4 +21,4 @@ if inspection.has_table('accounts') and not inspection.has_table('alembic_versio
     if subprocess.run([sys.executable,'-m','alembic','stamp',version],cwd=root,env=env).returncode:raise SystemExit('Test migration stamp failed')
 if subprocess.run([sys.executable,'-m','alembic','upgrade','head'],cwd=root,env=env).returncode:raise SystemExit('Test migration failed')
 engine.dispose()
-raise SystemExit(subprocess.run([sys.executable,'-m','pytest','services/api/tests','-q'],cwd=root,env=env).returncode)
+raise SystemExit(subprocess.run([sys.executable,'-m','pytest','services/api/tests','-q','--tb=no'],cwd=root,env=env).returncode)

@@ -1,23 +1,10 @@
-name: YEATS
+name: YEATS-Platform
 product: 叶芝英语
-engineering_name: YEATS-叶芝英语小程序
-slug: yeats
-project_root: 'D:\Codex\02_MiniProgram-小程序开发\002_YEATS-叶芝英语小程序'
-source_root: '01_Source-当前源码'
-repository: https://github.com/HEltDeng/YEATS
+repository: https://github.com/HEltDeng/YEATS-Platform
 visibility: private
-phase: 1-local-candidate-unaccepted
-parent: native-wechat-typescript
-teacher: react-typescript-vite-pc-phase2
-admin: react-typescript-vite-pc-phase3
+phase: teacher-development-unaccepted
 api: fastapi-postgresql-alembic
-namespace: yeats
-wechat_appid: local-secret-injected-not-committed
+admin: apps/admin-web
+parent: ../YEATS-Parent
+teacher: ../YEATS-Teacher
 deployment: unconfigured
-allowed_scope: this-project-only
-forbidden_projects: [VaSports, ClassroomAssessmentPlatform, MyChangLi]
-configuration:
-  wechat: apps/parent-miniprogram/project.config.json
-  client: apps/parent-miniprogram/config.ts
-  server: services/api/.env
-  deployment: infra/

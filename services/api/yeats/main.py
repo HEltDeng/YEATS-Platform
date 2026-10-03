@@ -18,7 +18,7 @@ from .wechat import wechat
 from .storage import store
 from . import schemas as S
 
-app=FastAPI(title='YEATS · 叶芝英语',version='0.1.0',docs_url='/docs' if settings.environment!='production' else None)
+app=FastAPI(title='YEATS · 叶芝英语',version='0.2.0',docs_url='/docs' if settings.environment!='production' else None)
 if settings.environment=='development' and settings.enable_development_login:
     from .development import router
     app.include_router(router)
@@ -27,6 +27,11 @@ def moderate_text(db,a,text):
     if settings.environment=='development' and settings.enable_development_login and a.is_test:
         audit(db,a,'development_safety_bypass',detail={'scope':'synthetic_text_only'});return
     wechat.check_text(text,identity_openid(db,a))
+
+@app.exception_handler(Exception)
+async def unexpected(request,exc):
+    # Never return raw SQL/credential-bearing exception details.
+    return JSONResponse(status_code=500,content={'detail':'服务器暂时异常，请稍后重试'})
 
 @app.exception_handler(IntegrityError)
 def conflict(request,exc): return JSONResponse(status_code=409,content={'detail':'数据已发生变化，请刷新后重试'})
@@ -286,3 +291,13 @@ def media(token:str,db:DB=Depends(database)):
     except ValueError:raise HTTPException(404,'文件暂不可用') from None
     if not path.is_file():raise HTTPException(404,'文件暂不可用')
     return FileResponse(path,media_type=f.mime,filename=f.name,content_disposition_type='attachment' if t.purpose=='download' else 'inline')
+
+
+# Teacher routes share the same database and authorization infrastructure.
+from .staff import router as staff_router
+app.include_router(staff_router)
+from fastapi.staticfiles import StaticFiles
+import os
+teacher_dist=Path(os.environ.get('YEATS_TEACHER_DIST', str(Path(__file__).resolve().parents[4]/'YEATS-Teacher/dist')))
+if teacher_dist.is_dir():
+    app.mount('/teacher',StaticFiles(directory=teacher_dist,html=True),name='teacher-web')

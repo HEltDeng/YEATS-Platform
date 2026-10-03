@@ -1,9 +1,7 @@
 param([switch]$WithTestIdentities)
 $ErrorActionPreference='Stop'
 $root=Split-Path $PSScriptRoot
-Set-Location -LiteralPath $root
-& "$root/.venv/Scripts/python.exe" scripts/configure-wechat-local.py
-if ($LASTEXITCODE -ne 0) { throw 'WeChat configuration failed' }
-& npm.cmd run build:parent
-if ($LASTEXITCODE -ne 0) { throw 'Parent build failed' }
+$parent=Join-Path (Split-Path $root) 'YEATS-Parent'
+Push-Location -LiteralPath $parent
+try { & npm.cmd run build; if ($LASTEXITCODE -ne 0) { throw 'Parent build failed' } } finally { Pop-Location }
 & "$PSScriptRoot/local.ps1" start -WithTestIdentities:$WithTestIdentities

@@ -17,6 +17,8 @@ def principal(authorization: str|None=Header(default=None), db:DB=Depends(databa
     session=db.scalar(select(Session).where(Session.token_hash==digest(authorization[7:]),Session.revoked==False,Session.expires_at>now()))
     account=db.get(Account,session.account_id) if session else None
     if not account or not account.active: raise HTTPException(401,'登录已过期，请重新登录')
+    if account.is_test and not (settings.environment=='test' or (settings.environment=='development' and settings.enable_development_login)):
+        raise HTTPException(403,'当前环境不允许开发测试身份')
     return account
 def parent(account:Account=Depends(principal)):
     if account.role!='parent': raise HTTPException(403,'仅限家长访问')
